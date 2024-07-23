@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using RepositoryPatternExample.API.Models;
 using RepositoryPatternExample.API.Repository;
+using RepositoryPatternExample.API.UnitOfWork;
 using System.Data.Entity;
 
 namespace RepositoryPatternExample.API.Controllers
@@ -10,7 +11,12 @@ namespace RepositoryPatternExample.API.Controllers
     public class WeatherForecastController : ControllerBase
     {
         private readonly IGenericRepository<Product> _repository;
-        private readonly IGenericRepository<WeatherForecast> _repository2;
+        private readonly IUnitOfWork _unitOfWork;
+
+        public WeatherForecastController(IUnitOfWork unitOfWork)
+        {
+            _unitOfWork = unitOfWork;
+        }
 
         [HttpGet(Name = "Get")]
         public async Task<List<Product>> Get()
@@ -18,15 +24,11 @@ namespace RepositoryPatternExample.API.Controllers
             return await _repository.GetAll().ToListAsync();
         }
 
-        [HttpGet(Name = "Add")]
-        public async Task<List<Product>> Add()
+        [HttpPost(Name = "Add")]
+        public async Task Add(Product model)
         {
-            var product = new Product
-            {
-                Name = "Deneme Ürün",
-                Price = 19;
-            };
-            return await _repository.GetAll().ToListAsync();
+            await _repository.AddAsync(model);
+            await _unitOfWork.CompleteAsync();
         }
     }
 }
